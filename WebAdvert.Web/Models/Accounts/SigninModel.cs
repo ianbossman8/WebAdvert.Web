@@ -14,5 +14,8 @@ namespace WebAdvert.Web.Models.Accounts
         [StringLength(6, ErrorMessage = "must be at least 6 char")]
         [Display(Name = "Password")]
         public string Password { get; set; }
+
+        [Display(Name = "Remember Me")]
+        public bool RememberMe { get; set; }
     }
 }

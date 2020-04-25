@@ -35,6 +35,10 @@ namespace WebAdvert.Web
                     RequireUppercase = false
                 };
             }); // injecting all the dependency
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = "/Accounts/Signin";
+            });
             services.AddControllersWithViews();
         }
 
