@@ -1,31 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using WebAdvert.Web.Models;
+using WebAdvert.Web.ServiceClients;
 
 namespace WebAdvert.Web.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        public IMapper Mapper { get; }
+        public IAdvertApiClient ApiClient { get; }
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(IMapper mapper, IAdvertApiClient apiClient)
         {
-            _logger = logger;
+            Mapper = mapper;
+            ApiClient = apiClient;
         }
 
         [Authorize]
+        [ResponseCache(Duration = 60)]
         public IActionResult Index()
-        {
-            return View();
-        }
-
-        public IActionResult Privacy()
         {
             return View();
         }

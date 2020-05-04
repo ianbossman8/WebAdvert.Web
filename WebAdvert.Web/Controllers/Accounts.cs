@@ -34,7 +34,6 @@ namespace WebAdvert.Web.Controllers
             if (ModelState.IsValid)
             {
                 var user = _pool.GetUser(model.Email);
-                Console.WriteLine(user);
 
                 if (user.Status != null)
                 {

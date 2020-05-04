@@ -36,6 +36,8 @@ namespace WebAdvert.Web.Controllers
             if (ModelState.IsValid)
             {
                 CreateAdvertModel createAdvertModel = _mapper.Map<CreateAdvertModel>(model);
+                createAdvertModel.UserName = User.Identity.Name;
+
                 AdvertResponse apiCallResponse = await _advertApiClient.Create(createAdvertModel);
                 string id = apiCallResponse.Id;
 
@@ -72,6 +74,7 @@ namespace WebAdvert.Web.Controllers
                     }
                     catch (Exception e)
                     {
+                        Console.WriteLine(e);
                         ConfirmAdvertRequest confirmModel = new ConfirmAdvertRequest()
                         {
                             Id = id,
@@ -80,7 +83,6 @@ namespace WebAdvert.Web.Controllers
                         };
 
                         await _advertApiClient.Confirm(confirmModel);
-                        Console.WriteLine(e);
                     }
                 }
 

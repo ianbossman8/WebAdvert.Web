@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -14,11 +12,20 @@ using Polly;
 using Polly.Extensions.Http;
 using WebAdvert.Web.ServiceClients;
 using WebAdvert.Web.Services;
+using AutoMapper;
+using Microsoft.AspNetCore.Http;
 
 namespace WebAdvert.Web
 {
     public class Startup
     {
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        public IConfiguration Configuration { get; }
+
         private IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPatternPolicy()
         {
             return HttpPolicyExtensions.HandleTransientHttpError().CircuitBreakerAsync(3, TimeSpan.FromSeconds(30));
@@ -31,16 +38,16 @@ namespace WebAdvert.Web
                 .WaitAndRetryAsync(5, retryAttempy => TimeSpan.FromSeconds(Math.Pow(2, retryAttempy)));
         }
 
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
-
-        public IConfiguration Configuration { get; }
-
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<CookiePolicyOptions>(options =>
+            {
+                // This lambda determines whether user consent for non-essential cookies is needed for a given request.
+                options.CheckConsentNeeded = context => true;
+                options.MinimumSameSitePolicy = SameSiteMode.None;
+            });
+
             services.AddCognitoIdentity(config =>
             {
                 config.Password = new Microsoft.AspNetCore.Identity.PasswordOptions
@@ -52,15 +59,20 @@ namespace WebAdvert.Web
                     RequireNonAlphanumeric = false,
                     RequireUppercase = false
                 };
-            }); // injecting all the dependency
+            });
+
             services.ConfigureApplicationCookie(options =>
             {
                 options.LoginPath = "/Accounts/Signin";
             });
+
+            services.AddAutoMapper(typeof(Startup));
             services.AddTransient<IFileUploader, S3FileUploader>();
+
             services.AddHttpClient<IAdvertApiClient, AdvertApiClient>()
                 .AddPolicyHandler(GetRetryPolicy())
                 .AddPolicyHandler(GetCircuitBreakerPatternPolicy());
+
             services.AddControllersWithViews();
         }
 
@@ -77,13 +89,13 @@ namespace WebAdvert.Web
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-
             app.UseRouting();
-
-            app.UseAuthorization();
+            app.UseCookiePolicy();
             app.UseAuthentication();
+            app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
